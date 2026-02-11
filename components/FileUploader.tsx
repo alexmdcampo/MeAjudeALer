@@ -47,11 +47,15 @@ export function FileUploader({
         body: JSON.stringify({ name, content: inputText }),
       });
       
-      if (!res.ok) throw new Error("Erro ao salvar");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.details || errorData.error || "Erro ao salvar");
+      }
       
       toast.success("Texto salvo com sucesso!");
     } catch (e) {
-      toast.error("Não foi possível salvar o texto.");
+      const msg = e instanceof Error ? e.message : "Não foi possível salvar o texto.";
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

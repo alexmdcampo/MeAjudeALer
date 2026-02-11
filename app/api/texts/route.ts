@@ -20,6 +20,8 @@ export async function POST(request: Request) {
     const result = await saveText(name || 'Sem Titulo', content);
     return NextResponse.json(result);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to save text' }, { status: 500 });
+    console.error("Error in POST /api/texts:", error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: 'Failed to save text', details: errorMessage }, { status: 500 });
   }
 }

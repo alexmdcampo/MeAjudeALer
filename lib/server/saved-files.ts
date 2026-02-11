@@ -1,14 +1,22 @@
 import fs from 'fs/promises';
 import path from 'path';
 
-const TEXTS_DIR = path.join(process.cwd(), 'data', 'texts');
+const DATA_PATH = process.env.DATA_PATH || path.join(process.cwd(), 'data');
+const TEXTS_DIR = path.join(DATA_PATH, 'texts');
 
 // Helper to ensure directory exists
 async function ensureDir() {
   try {
+    // console.log(`Checking access to: ${TEXTS_DIR}`);
     await fs.access(TEXTS_DIR);
-  } catch {
-    await fs.mkdir(TEXTS_DIR, { recursive: true });
+  } catch (error) {
+    console.log(`Creating directory: ${TEXTS_DIR}`);
+    try {
+      await fs.mkdir(TEXTS_DIR, { recursive: true });
+    } catch (mkdirError) {
+      console.error(`Failed to create directory ${TEXTS_DIR}:`, mkdirError);
+      throw mkdirError;
+    }
   }
 }
 

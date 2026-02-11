@@ -94,9 +94,16 @@ Após o deploy:
 - Verifique os logs no Portainer
 - Certifique-se que a porta 3000 não está em uso
 
-### Textos não são salvos
-- Verifique se o volume está montado corretamente
-- Verifique permissões do diretório no host
+### Textos não são salvos (Erro de Permissão)
+Se você receber a mensagem "Não foi possível salvar o texto", geralmente é um problema de permissão no volume montado. O container roda com o usuário `nextjs` (UID `1001`).
+
+No servidor onde o Docker está rodando, execute:
+```bash
+# Vá até a pasta do projeto
+sudo chown -R 1001:1001 ./data/texts
+sudo chmod -R 755 ./data/texts
+```
+Isso garante que o usuário de dentro do container tenha permissão de escrita na pasta do host.
 
 ### Build falha
 - Execute `npm run build` localmente primeiro para verificar erros
