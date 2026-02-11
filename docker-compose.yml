@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  meajudealear:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: meajudealear
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      # Volume persistente para textos salvos
+      - ./data/texts:/app/data/texts
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

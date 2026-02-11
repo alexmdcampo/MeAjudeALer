@@ -1,4 +1,5 @@
 import { PDFParse } from "pdf-parse";
+import { formatText } from "./format-text";
 
 export async function formatterPdf(arrayBuffer: ArrayBuffer) {
   const buffer = Buffer.from(arrayBuffer);
@@ -7,10 +8,10 @@ export async function formatterPdf(arrayBuffer: ArrayBuffer) {
   await parser.destroy();
 
   // altera o marcador de página de -- 1 of 1 -- para -- pág 1 de 1 --
-  const finalData = data.text.replace(
+  const textWithPages = data.text.replace(
     /--\s+(\d+)\s+of\s+(\d+)\s+--/g,
     "-- pág $1 de $2 --",
   );
 
-  return finalData;
+  return formatText(textWithPages);
 }

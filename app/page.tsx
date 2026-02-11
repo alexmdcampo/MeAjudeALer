@@ -12,12 +12,17 @@ import { ReadingCanvas } from "@/components/ReadingCanvas";
 import { useReadingRuler } from "@/hooks/useReadingRuler";
 
 export default function DyslexiaReader() {
-  const [inputText, setInputText] = useState("");
+  const [inputText, setInputText] = useState("<p></p>");
   const [inputTextDisable, setInputTextDisable] = useState(false);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [selectedFont, setSelectedFont] = useState("OpenDyslexic");
   const [loading, setLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [formattingOptions, setFormattingOptions] = useState({
+    keepBold: true,
+    keepTables: true,
+    keepTopics: true,
+  });
 
   const {
     rulerPosition,
@@ -68,15 +73,46 @@ export default function DyslexiaReader() {
                   Leitura Facilitada
                 </h2>
               </div>
-              <div className="flex items-center gap-2 mb-4">
-                <FontSelector
-                  selectedFont={selectedFont}
-                  setSelectedFont={setSelectedFont}
-                />
-                <ToggleExpand
-                  toggleExpand={toggleExpand}
-                  isExpanded={isExpanded}
-                />
+              <div className="flex flex-wrap items-center gap-4 mb-4">
+                <div className="flex items-center gap-4 border-r pr-4 border-amber-100 italic text-xs text-amber-800">
+                  <label className="flex items-center gap-1 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formattingOptions.keepBold}
+                      onChange={(e) => setFormattingOptions({...formattingOptions, keepBold: e.target.checked})}
+                      className="rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                    />
+                    Negrito
+                  </label>
+                  <label className="flex items-center gap-1 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formattingOptions.keepTables}
+                      onChange={(e) => setFormattingOptions({...formattingOptions, keepTables: e.target.checked})}
+                      className="rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                    />
+                    Tabelas
+                  </label>
+                  <label className="flex items-center gap-1 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formattingOptions.keepTopics}
+                      onChange={(e) => setFormattingOptions({...formattingOptions, keepTopics: e.target.checked})}
+                      className="rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                    />
+                    Tópicos
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <FontSelector
+                    selectedFont={selectedFont}
+                    setSelectedFont={setSelectedFont}
+                  />
+                  <ToggleExpand
+                    toggleExpand={toggleExpand}
+                    isExpanded={isExpanded}
+                  />
+                </div>
               </div>
             </div>
             <ReadingCanvas
@@ -87,6 +123,7 @@ export default function DyslexiaReader() {
               onMouseLeave={handleMouseLeave}
               onTouchMove={handleTouchMove}
               outputRef={outputRef}
+              formattingOptions={formattingOptions}
             >
               {inputText || (
                 <span className="text-gray-500 italic">

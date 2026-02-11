@@ -1,8 +1,10 @@
 import { validatePDF } from "@/lib/utils/validate-pdf";
 import { toast } from "sonner";
 import { ClearText } from "./ClearText";
-import { Type, FileText } from "lucide-react";
-import { Dispatch, SetStateAction } from "react";
+import { FileText, Save, FolderOpen } from "lucide-react";
+import { Dispatch, SetStateAction, useState } from "react";
+import { RichTextEditor } from "./RichTextEditor";
+import { SavedTextsModal } from "./SavedTextsModal";
 
 interface FileUploaderProps {
   inputText: string;
@@ -25,13 +27,41 @@ export function FileUploader({
   setLoading,
   setIsExpanded,
 }: FileUploaderProps) {
+  const [showSavedTexts, setShowSavedTexts] = useState(false);
+
   const clearText = () => {
     setInputTextDisable(false);
     setPdfFile(null);
-    setInputText("");
+    setInputText("<p></p>");
   };
 
-  const exampleText = `Cole seu texto aqui para uma leitura mais confortável. Esta ferramenta foi desenvolvida para ajudar pessoas com dislexia a ler com mais facilidade, usando espaçamento adequado, cores suaves e uma régua de leitura que acompanha seu movimento.`;
+  const handleSaveText = async () => {
+    const name = prompt("Digite um nome para salvar o texto:");
+    if (name === null) return; // Cancelado
+
+    try {
+      setLoading(true);
+      const res = await fetch("/api/texts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, content: inputText }),
+      });
+      
+      if (!res.ok) throw new Error("Erro ao salvar");
+      
+      toast.success("Texto salvo com sucesso!");
+    } catch (e) {
+      toast.error("Não foi possível salvar o texto.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadSavedText = (content: string) => {
+    setInputText(content);
+    setInputTextDisable(true); // Bloqueia edição direta se quiser, ou deixa false
+    setIsExpanded(true);
+  };
 
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -61,7 +91,9 @@ export function FileUploader({
         throw new Error("O PDF não tem texto");
       }
 
-      setInputText(data.text);
+      // Converte o texto plano do PDF para HTML básico para o editor
+      const htmlText = data.text.split('\n\n').map((p: string) => `<p>${p}</p>`).join('');
+      setInputText(htmlText);
       setInputTextDisable(true);
       setPdfFile(file);
       setIsExpanded(true);
@@ -77,13 +109,35 @@ export function FileUploader({
     <div className="bg-white rounded-2xl shadow-lg p-6">
       <div className="flex flex-wrap md:items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-2">
-          <Type className="w-5 h-5 text-amber-700" />
+          <FileText className="w-5 h-5 text-amber-700" />
           <h2 className="text-xl font-semibold text-gray-800">
             Texto Original
+            <span className="block text-[10px] font-normal text-amber-600">
+              (Edite o texto com formatação real: negrito, listas e tabelas)
+            </span>
           </h2>
         </div>
         <div className="flex flex-wrap flex-row-reverse gap-4">
+          
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowSavedTexts(true)}
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-amber-900 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors"
+              title="Meus Textos Salvos"
+            >
+              <FolderOpen className="w-4 h-4" />
+              <span className="hidden sm:inline">Meus Textos</span>
+            </button>
+            <button
+              onClick={handleSaveText}
+              disabled={!inputText || inputText === "<p></p>"}
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-amber-900 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Salvar Texto"
+            >
+              <Save className="w-4 h-4" />
+              <span className="hidden sm:inline">Salvar</span>
+            </button>
+            
             <label
               className="flex-1 min-w-[140px] flex text-sm font-medium text-amber-900 whitespace-nowrap items-center justify-center gap-2 bg-amber-50 border border-amber-200 px-4 py-2 rounded-lg cursor-pointer hover:bg-amber-100 transition-colors"
               htmlFor="pdf-upload"
@@ -110,12 +164,17 @@ export function FileUploader({
           </div>
         </div>
       </div>
-      <textarea
-        value={inputText}
-        onChange={(e) => setInputText(e.target.value)}
-        placeholder={exampleText}
-        className="w-full h-96 p-4 border-2 border-amber-200 rounded-xl focus:border-amber-400 focus:outline-none resize-none font-sans text-gray-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-200 disabled:cursor-not-allowed disabled:shadow-none disabled:opacity-75"
-        disabled={inputTextDisable}
+      
+      <RichTextEditor 
+        content={inputText} 
+        onChange={setInputText} 
+        disabled={inputTextDisable} 
+      />
+      
+      <SavedTextsModal 
+        isOpen={showSavedTexts} 
+        onClose={() => setShowSavedTexts(false)} 
+        onLoadText={loadSavedText} 
       />
     </div>
   );
